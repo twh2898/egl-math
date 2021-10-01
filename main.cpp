@@ -5,6 +5,7 @@
 #include <fstream>
 #include <string>
 
+#include "buffer.hpp"
 #include "Shader.hpp"
 #include "vbo.hpp"
 
@@ -24,16 +25,24 @@ static const EGLint configAttribs[] = {EGL_SURFACE_TYPE,
                                        EGL_OPENGL_BIT,
                                        EGL_NONE};
 
-static const int pbufferWidth = 90;
-static const int pbufferHeight = 90;
+static const int pbufferWidth = 2;
+static const int pbufferHeight = 1;
 
 static const EGLint pbufferAttribs[] = {
     EGL_WIDTH, pbufferWidth, EGL_HEIGHT, pbufferHeight, EGL_NONE,
 };
 
+const std::vector<int> one = {
+    0, 1
+};
+
+const std::vector<int> two = {
+    2, 3
+};
+
 void do_render();
-std::vector<uint8_t> read_buffer();
-void write_buffer(const std::string &, const std::vector<uint8_t> &);
+std::vector<int> read_buffer();
+void write_buffer(const std::string &, const std::vector<int> &);
 
 int main() {
     fmt::print("Start\n");
@@ -75,16 +84,28 @@ int main() {
     // from now on use your OpenGL context
 
     auto shader = Shader::fromFragmentPath("../shader.frag");
+    if (!shader)
+        return 1;
+
+    auto buff1 = Buffer::fromTable(one, pbufferWidth, pbufferHeight);
+    if (!buff1)
+        return 2;
+    auto buff2 = Buffer::fromTable(two, pbufferWidth, pbufferHeight);
+    if (!buff2)
+        return 3;
 
     glClearColor(0.0, 0.0, 0.0, 1.0);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    glDisable(GL_TEXTURE_2D);
 
     shader->bind();
     shader->setMat4("model", glm::mat4(1.0));
     shader->setMat4("mvp", glm::mat4(1.0));
     shader->setInt("width", pbufferWidth);
     shader->setInt("height", pbufferHeight);
+    glActiveTexture(GL_TEXTURE0);
+    buff1->bind();
+    glActiveTexture(GL_TEXTURE0+1);
+    buff2->bind();
     do_render();
     auto buff = read_buffer();
     write_buffer("output.csv", buff);
@@ -120,17 +141,18 @@ int back_to_int(const std::vector<uint8_t> & buff, size_t index) {
     return res;
 }
 
-std::vector<uint8_t> read_buffer() {
-    std::vector<uint8_t> buff(pbufferWidth * pbufferHeight * 4, 0);
+std::vector<int> read_buffer() {
+    std::vector<int> buff(pbufferWidth * pbufferHeight * 4, 0);
     glReadPixels(0, 0, pbufferWidth, pbufferHeight, GL_RGBA, GL_UNSIGNED_BYTE,
                  buff.data());
+    
+    fmt::print("Pixel 0 is {:#x}\n", buff[0]);
+    fmt::print("Pixel 1 is {:#x}\n", buff[1]);
 
-    fmt::print("Pixel 0 is {} {} {} {}\n", buff[0], buff[1], buff[2], buff[3]);
-    fmt::print("That is {}\n", back_to_int(buff, 0));
     return buff;
 }
 
-void write_buffer(const std::string & filename, const std::vector<uint8_t> & buff) {
+void write_buffer(const std::string & filename, const std::vector<int> & buff) {
     std::ofstream os(filename);
 
     for (int r = 0; r < pbufferHeight; r++) {
@@ -138,7 +160,7 @@ void write_buffer(const std::string & filename, const std::vector<uint8_t> & buf
             if (c > 0) {
                 os << ", ";
             }
-            os << back_to_int(buff, r * pbufferHeight + c);
+            os << buff[r * pbufferHeight + c];
         }
         os << std::endl;
     }

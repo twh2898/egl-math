@@ -7,6 +7,7 @@ find_package(OpenGL REQUIRED)
 set(TARGET app)
 add_executable(${TARGET}
     main.cpp
+    buffer.hpp
     Shader.cpp
     Shader.hpp
     vbo.hpp
