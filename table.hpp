@@ -8,7 +8,7 @@
 #include <string_view>
 #include <vector>
 
-class Buffer {
+class Table {
     GLuint texId;
     std::vector<int> table;
     int width, height;
@@ -18,12 +18,12 @@ class Buffer {
     }
 
 public:
-    typedef std::shared_ptr<Buffer> Ptr;
+    typedef std::shared_ptr<Table> Ptr;
 
-    Buffer() : table(), width(0), height(0) {
+    Table() : table(), width(0), height(0) {
         glGenTextures(1, &texId);
     }
-    ~Buffer() {
+    ~Table() {
         glDeleteTextures(1, &texId);
     }
 
@@ -67,8 +67,8 @@ public:
         glBindTexture(GL_TEXTURE_2D, texId);
     }
 
-    static Buffer::Ptr fromTable(const std::vector<int> & table, int width, int height) {
-        auto buff = std::make_shared<Buffer>();
+    static Table::Ptr fromTable(const std::vector<int> & table, int width, int height) {
+        auto buff = std::make_shared<Table>();
         if (buff) {
             buff->loadTable(table, width, height);
         }

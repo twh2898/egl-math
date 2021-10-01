@@ -5,7 +5,7 @@
 #include <fstream>
 #include <string>
 
-#include "buffer.hpp"
+#include "table.hpp"
 #include "Shader.hpp"
 #include "vbo.hpp"
 
@@ -87,10 +87,10 @@ int main() {
     if (!shader)
         return 1;
 
-    auto buff1 = Buffer::fromTable(one, pbufferWidth, pbufferHeight);
+    auto buff1 = Table::fromTable(one, pbufferWidth, pbufferHeight);
     if (!buff1)
         return 2;
-    auto buff2 = Buffer::fromTable(two, pbufferWidth, pbufferHeight);
+    auto buff2 = Table::fromTable(two, pbufferWidth, pbufferHeight);
     if (!buff2)
         return 3;
 
