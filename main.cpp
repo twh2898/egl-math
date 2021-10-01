@@ -6,87 +6,32 @@
 #include <string>
 
 #include "Shader.hpp"
+#include "context.hpp"
 #include "table.hpp"
 #include "vbo.hpp"
 
-static const EGLint configAttribs[] = {EGL_SURFACE_TYPE,
-                                       EGL_PBUFFER_BIT,
-                                       EGL_BLUE_SIZE,
-                                       8,
-                                       EGL_GREEN_SIZE,
-                                       8,
-                                       EGL_RED_SIZE,
-                                       8,
-                                       EGL_ALPHA_SIZE,
-                                       8,
-                                       EGL_DEPTH_SIZE,
-                                       8,
-                                       EGL_RENDERABLE_TYPE,
-                                       EGL_OPENGL_BIT,
-                                       EGL_NONE};
-
-static const int pbufferWidth = 2;
-static const int pbufferHeight = 1;
-
-static const EGLint pbufferAttribs[] = {
-    EGL_WIDTH, pbufferWidth, EGL_HEIGHT, pbufferHeight, EGL_NONE,
-};
-
 const std::vector<int> one = {0, 1};
-
 const std::vector<int> two = {2, 3};
 
 void do_render();
-std::vector<int> read_buffer();
-void write_buffer(const std::string &, const std::vector<int> &);
+void write_buffer(const std::string &, const Table::Ptr &);
 
 int main() {
-    fmt::print("Start\n");
-
-    // 1. Initialize EGL
-    EGLDisplay eglDpy = eglGetDisplay(EGL_DEFAULT_DISPLAY);
-
-    EGLint major, minor;
-
-    eglInitialize(eglDpy, &major, &minor);
-
-    fmt::print("Display Initialized {}.{}\n", major, minor);
-
-    // 2. Select an appropriate configuration
-    EGLint numConfigs;
-    EGLConfig eglCfg;
-
-    eglChooseConfig(eglDpy, configAttribs, &eglCfg, 1, &numConfigs);
-
-    fmt::print("Config chosen\n");
-
-    // 3. Create a surface
-    EGLSurface eglSurf = eglCreatePbufferSurface(eglDpy, eglCfg, pbufferAttribs);
-
-    fmt::print("Surface created\n");
-
-    // 4. Bind the API
-    eglBindAPI(EGL_OPENGL_API);
-
-    fmt::print("Bound api\n");
-
-    // 5. Create a context and make it current
-    EGLContext eglCtx = eglCreateContext(eglDpy, eglCfg, EGL_NO_CONTEXT, NULL);
-
-    eglMakeCurrent(eglDpy, eglSurf, eglSurf, eglCtx);
-
+    Context context(2, 1);
+    context.makeCurrent();
     fmt::print("Context created\n");
-
-    // from now on use your OpenGL context
 
     auto shader = Shader::fromFragmentPath("../shader.frag");
     if (!shader)
         return 1;
 
-    auto buff1 = Table::fromTable("one", one, pbufferWidth, pbufferHeight);
+    auto buff1 =
+        Table::fromTable("one", one, context.getWidth(), context.getHeight());
     if (!buff1)
         return 2;
-    auto buff2 = Table::fromTable("two", two, pbufferWidth, pbufferHeight);
+
+    auto buff2 =
+        Table::fromTable("two", two, context.getWidth(), context.getHeight());
     if (!buff2)
         return 3;
 
@@ -94,19 +39,17 @@ int main() {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     shader->bind();
-    shader->setInt("width", pbufferWidth);
-    shader->setInt("height", pbufferHeight);
+    shader->setInt("width", context.getWidth());
+    shader->setInt("height", context.getHeight());
     buff1->bind(0, shader);
     buff2->bind(1, shader);
-    fmt::print("{}\n", buff2->getTexId());
+    
     do_render();
-    auto buff = read_buffer();
-    write_buffer("output.csv", buff);
 
-    // 6. Terminate EGL when finished
-    eglTerminate(eglDpy);
-
-    fmt::print("Terminated\n");
+    auto output = std::make_shared<Table>("output", context.getWidth(),
+                                          context.getHeight());
+    output->readFromPixels();
+    write_buffer("output.csv", output);
 
     return 0;
 }
@@ -134,22 +77,15 @@ int back_to_int(const std::vector<uint8_t> & buff, size_t index) {
     return res;
 }
 
-std::vector<int> read_buffer() {
-    std::vector<int> buff(pbufferWidth * pbufferHeight * 4, 0);
-    glReadPixels(0, 0, pbufferWidth, pbufferHeight, GL_RGBA, GL_UNSIGNED_BYTE,
-                 buff.data());
-    return buff;
-}
-
-void write_buffer(const std::string & filename, const std::vector<int> & buff) {
+void write_buffer(const std::string & filename, const Table::Ptr & table) {
     std::ofstream os(filename);
 
-    for (int r = 0; r < pbufferHeight; r++) {
-        for (int c = 0; c < pbufferWidth; c++) {
+    for (int r = 0; r < table->getHeight(); r++) {
+        for (int c = 0; c < table->getWidth(); c++) {
             if (c > 0) {
                 os << ", ";
             }
-            os << buff[r * pbufferHeight + c];
+            os << table->getCell(r, c);
         }
         os << std::endl;
     }

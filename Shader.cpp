@@ -87,19 +87,15 @@ static std::string linkError(GLuint program) {
 static GLuint compileShader(GLuint shaderType,
                             const std::string_view & shaderSource) {
     GLuint shader = glCreateShader(shaderType);
-    fmt::print("Compiling shader {}: type={}\n", shader, shaderType);
     const char * source = shaderSource.data();
     glShaderSource(shader, 1, &source, NULL);
     glCompileShader(shader);
     return shader;
 }
 
-Shader::Shader() : program(glCreateProgram()) {
-    fmt::print("Created shader program {}\n", program);
-}
+Shader::Shader() : program(glCreateProgram()) {}
 
 Shader::~Shader() {
-    fmt::print("Deleting shader program {}\n", program);
     glDeleteProgram(program);
 }
 
@@ -138,14 +134,11 @@ bool Shader::loadFromSource(const std::string_view & vertexSource,
         return false;
     }
 
-    fmt::print("Shader program {} was compiled and linked\n", program);
     return true;
 }
 
 bool Shader::loadFromPath(const std::string_view & vertexPath,
                           const std::string_view & fragmentPath) {
-    fmt::print("loading Shader from paths vertex=\"{}\" fragment=\"{}\"\n",
-               vertexPath, fragmentPath);
 
     std::string vertexSource = shaderSource(vertexPath);
     std::string fragmentSource = shaderSource(fragmentPath);
@@ -280,7 +273,6 @@ void main() {
 })";
 
 Shader::Ptr Shader::defaultShader() {
-    fmt::print("Loading the default shader\n");
     auto shader = std::make_shared<Shader>();
     if (shader
         && !shader->loadFromSource(defaultVertexShaderSource,
@@ -297,7 +289,6 @@ Shader::Ptr Shader::fromFragmentPath(const std::string_view & path) {
 }
 
 Shader::Ptr Shader::fromFragmentSource(const std::string_view & fragmentSource) {
-    fmt::print("Loading a fragment shader with default vertex shader\n");
     auto shader = std::make_shared<Shader>();
     if (shader
         && !shader->loadFromSource(defaultVertexShaderSource, fragmentSource)) {

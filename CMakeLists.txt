@@ -8,6 +8,7 @@ set(TARGET app)
 add_executable(${TARGET}
     main.cpp
     table.hpp
+    context.hpp
     Shader.cpp
     Shader.hpp
     vbo.hpp
