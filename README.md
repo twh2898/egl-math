@@ -1,4 +1,4 @@
-# SFML 3D  Engine
+# EGL Math
 
 Vectorized math operations using GLSL shaders and an EGL context.
 
