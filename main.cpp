@@ -104,8 +104,11 @@ int main() {
     shader->setInt("height", pbufferHeight);
     glActiveTexture(GL_TEXTURE0);
     buff1->bind();
+    shader->setInt("one", 0);
     glActiveTexture(GL_TEXTURE0+1);
     buff2->bind();
+    shader->setInt("two", 1);
+    fmt::print("{}\n", buff2->getTexId());
     do_render();
     auto buff = read_buffer();
     write_buffer("output.csv", buff);
