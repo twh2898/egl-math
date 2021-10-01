@@ -8,8 +8,11 @@
 #include <string_view>
 #include <vector>
 
+#include "Shader.hpp"
+
 class Table {
     GLuint texId;
+    std::string name;
     std::vector<int> table;
     int width, height;
 
@@ -20,7 +23,8 @@ class Table {
 public:
     typedef std::shared_ptr<Table> Ptr;
 
-    Table() : table(), width(0), height(0) {
+    Table(const std::string_view & name)
+        : table(), name(name), width(0), height(0) {
         glGenTextures(1, &texId);
     }
     ~Table() {
@@ -63,12 +67,17 @@ public:
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     }
 
-    void bind() {
+    void bind(int index, const Shader::Ptr & shader) {
+        glActiveTexture(GL_TEXTURE0 + index);
         glBindTexture(GL_TEXTURE_2D, texId);
+        shader->setInt(name, index);
     }
 
-    static Table::Ptr fromTable(const std::vector<int> & table, int width, int height) {
-        auto buff = std::make_shared<Table>();
+    static Table::Ptr fromTable(const std::string_view & name,
+                                const std::vector<int> & table,
+                                int width,
+                                int height) {
+        auto buff = std::make_shared<Table>(name);
         if (buff) {
             buff->loadTable(table, width, height);
         }

@@ -5,8 +5,8 @@
 #include <fstream>
 #include <string>
 
-#include "table.hpp"
 #include "Shader.hpp"
+#include "table.hpp"
 #include "vbo.hpp"
 
 static const EGLint configAttribs[] = {EGL_SURFACE_TYPE,
@@ -32,13 +32,9 @@ static const EGLint pbufferAttribs[] = {
     EGL_WIDTH, pbufferWidth, EGL_HEIGHT, pbufferHeight, EGL_NONE,
 };
 
-const std::vector<int> one = {
-    0, 1
-};
+const std::vector<int> one = {0, 1};
 
-const std::vector<int> two = {
-    2, 3
-};
+const std::vector<int> two = {2, 3};
 
 void do_render();
 std::vector<int> read_buffer();
@@ -87,10 +83,10 @@ int main() {
     if (!shader)
         return 1;
 
-    auto buff1 = Table::fromTable(one, pbufferWidth, pbufferHeight);
+    auto buff1 = Table::fromTable("one", one, pbufferWidth, pbufferHeight);
     if (!buff1)
         return 2;
-    auto buff2 = Table::fromTable(two, pbufferWidth, pbufferHeight);
+    auto buff2 = Table::fromTable("two", two, pbufferWidth, pbufferHeight);
     if (!buff2)
         return 3;
 
@@ -98,16 +94,10 @@ int main() {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     shader->bind();
-    shader->setMat4("model", glm::mat4(1.0));
-    shader->setMat4("mvp", glm::mat4(1.0));
     shader->setInt("width", pbufferWidth);
     shader->setInt("height", pbufferHeight);
-    glActiveTexture(GL_TEXTURE0);
-    buff1->bind();
-    shader->setInt("one", 0);
-    glActiveTexture(GL_TEXTURE0+1);
-    buff2->bind();
-    shader->setInt("two", 1);
+    buff1->bind(0, shader);
+    buff2->bind(1, shader);
     fmt::print("{}\n", buff2->getTexId());
     do_render();
     auto buff = read_buffer();
@@ -148,10 +138,6 @@ std::vector<int> read_buffer() {
     std::vector<int> buff(pbufferWidth * pbufferHeight * 4, 0);
     glReadPixels(0, 0, pbufferWidth, pbufferHeight, GL_RGBA, GL_UNSIGNED_BYTE,
                  buff.data());
-    
-    fmt::print("Pixel 0 is {:#x}\n", buff[0]);
-    fmt::print("Pixel 1 is {:#x}\n", buff[1]);
-
     return buff;
 }
 
