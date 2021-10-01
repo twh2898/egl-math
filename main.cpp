@@ -62,7 +62,7 @@ static Table::Ptr read_csv(const std::string_view & filename) {
         tableName.remove_suffix(tableName.size() - dotPos);
     }
 
-    fmt::print("Table name is {} from {}\n", tableName, filename);
+    fmt::print("Table {} loaded from {}\n", tableName, filename);
     return Table::fromTable(tableName, data, width, height);
 }
 
@@ -88,11 +88,11 @@ static int render_with(const Context & context) {
     if (!shader)
         return 1;
 
-    auto buff1 = read_csv("one.csv");
+    auto buff1 = read_csv("../one.csv");
     if (!buff1)
         return 2;
 
-    auto buff2 = read_csv("two.csv");
+    auto buff2 = read_csv("../two.csv");
     if (!buff2)
         return 3;
 
