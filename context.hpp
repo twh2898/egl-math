@@ -51,15 +51,15 @@ public:
         eglTerminate(eglDpy);
     }
 
-    int getWidth() {
+    int getWidth() const {
         return width;
     }
 
-    int getHeight() {
+    int getHeight() const {
         return height;
     }
 
-    void makeCurrent() {
+    void makeCurrent() const {
         eglMakeCurrent(eglDpy, eglSurf, eglSurf, eglCtx);
     }
 };

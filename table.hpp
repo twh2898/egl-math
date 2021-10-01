@@ -16,7 +16,7 @@ class Table {
     std::vector<int> table;
     int width, height;
 
-    int index(int row, int col) {
+    int index(int row, int col) const {
         return row * width + col;
     }
 
@@ -32,19 +32,19 @@ public:
         glDeleteTextures(1, &texId);
     }
 
-    GLuint getTexId() {
+    GLuint getTexId() const {
         return texId;
     }
 
-    const int * data() {
+    const int * data() const {
         return table.data();
     }
 
-    int getWidth() {
+    int getWidth() const {
         return width;
     }
 
-    int getHeight() {
+    int getHeight() const {
         return height;
     }
 
@@ -52,7 +52,7 @@ public:
         table[index(row, col)] = val;
     }
 
-    int getCell(int row, int col) {
+    int getCell(int row, int col) const {
         return table[index(row, col)];
     }
 
@@ -70,7 +70,7 @@ public:
         glReadPixels(0, 0, width, height, GL_RGBA, GL_UNSIGNED_BYTE, table.data());
     }
 
-    void bind(int index, const Shader::Ptr & shader) {
+    void bind(int index, const Shader::Ptr & shader) const {
         glActiveTexture(GL_TEXTURE0 + index);
         glBindTexture(GL_TEXTURE_2D, texId);
         shader->setInt(name, index);

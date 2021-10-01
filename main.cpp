@@ -10,16 +10,26 @@
 #include "table.hpp"
 #include "vbo.hpp"
 
-const std::vector<int> one = {0, 1};
-const std::vector<int> two = {2, 3};
+static const std::vector<int> one = {0, 1};
+static const std::vector<int> two = {2, 3};
 
-void do_render();
-void write_buffer(const std::string &, const Table::Ptr &);
+static void write_buffer(const std::string & filename, const Table::Ptr & table) {
+    std::ofstream os(filename);
 
-int main() {
-    Context context(2, 1);
+    for (int r = 0; r < table->getHeight(); r++) {
+        for (int c = 0; c < table->getWidth(); c++) {
+            if (c > 0) {
+                os << ", ";
+            }
+            os << table->getCell(r, c);
+        }
+        os << std::endl;
+    }
+    os.close();
+}
+
+static int render_with(const Context & context) {
     context.makeCurrent();
-    fmt::print("Context created\n");
 
     auto shader = Shader::fromFragmentPath("../shader.frag");
     if (!shader)
@@ -43,18 +53,7 @@ int main() {
     shader->setInt("height", context.getHeight());
     buff1->bind(0, shader);
     buff2->bind(1, shader);
-    
-    do_render();
 
-    auto output = std::make_shared<Table>("output", context.getWidth(),
-                                          context.getHeight());
-    output->readFromPixels();
-    write_buffer("output.csv", output);
-
-    return 0;
-}
-
-void do_render() {
     VBO vbo;
     vbo.loadFromPoints({
         Vertex({1, -1, 0}, {0, 0, 0}, {1, 0}),
@@ -67,27 +66,24 @@ void do_render() {
     });
 
     vbo.draw();
+
+    return 0;
 }
 
-int back_to_int(const std::vector<uint8_t> & buff, size_t index) {
-    int res = 0;
-    for (int i = 0; i < 4; i++) {
-        res = (res << 8) | buff[index * 4 + i];
-    }
-    return res;
-}
+int main() {
+    Context context(2, 1);
+    fmt::print("Context created\n");
 
-void write_buffer(const std::string & filename, const Table::Ptr & table) {
-    std::ofstream os(filename);
-
-    for (int r = 0; r < table->getHeight(); r++) {
-        for (int c = 0; c < table->getWidth(); c++) {
-            if (c > 0) {
-                os << ", ";
-            }
-            os << table->getCell(r, c);
-        }
-        os << std::endl;
+    int res = render_with(context);
+    if (res) {
+        fmt::print("Failure during render\n");
+        return res;
     }
-    os.close();
+
+    auto output = std::make_shared<Table>("output", context.getWidth(),
+                                          context.getHeight());
+    output->readFromPixels();
+    write_buffer("output.csv", output);
+
+    return 0;
 }

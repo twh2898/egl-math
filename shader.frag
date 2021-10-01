@@ -42,7 +42,7 @@ int getCell(sampler2D t, int x, int y) {
 int calc(int x, int y) {
     int a = getCell(one, x, y);
     int b = getCell(two, x, y);
-    return a+b;
+    return b-a;
 }
 
 void main() {
